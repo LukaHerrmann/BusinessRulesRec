@@ -33,6 +33,11 @@ def updatedata(cursor, query, values):
     cursor.execute(query, values)
 
 
+def maketable(cursor, query):
+    '''Deze functie kan een nieuwe tabel aanmaken'''
+    cursor.execute(query)
+
+
 def closeconnection(connection, cursor):
     '''Deze functie sluit de connectie met de PGAdmin database'''
     cursor.close()
