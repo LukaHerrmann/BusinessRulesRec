@@ -15,22 +15,22 @@ def makecursor(connection):
     return connection.cursor()
 
 
-def insertdata(cursor, query, values):
+def insertdata(cursor, query):
     '''Deze functie voert data in in de database'''
-    cursor.execute(query, values)
+    cursor.execute(query)
 
 
-def getdata(cursor, query, values, fetchone=True):
+def getdata(cursor, query, fetchone=True):
     '''Deze functie haalt data op uit de PGAdmin database'''
-    cursor.execute(query, values)
+    cursor.execute(query)
     if fetchone:
         return cursor.fetchone()
     return cursor.fetchall()
 
 
-def updatedata(cursor, query, values):
+def updatedata(cursor, query):
     '''Deze functie kan waardes veranderen van bepaalde rijen'''
-    cursor.execute(query, values)
+    cursor.execute(query)
 
 
 def maketable(cursor, query):
