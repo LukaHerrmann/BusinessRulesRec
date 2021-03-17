@@ -65,3 +65,10 @@ def makeentry(root, x, y, width, font, textcolor, bgcolor, anchor):
                   width=width)
     entry.place(relx=x, rely=y, anchor=anchor)
     return entry
+
+
+def makeframe(root,side, bgcolor, expand, fill, anchor):
+    frame = Frame(root,
+                  bg=bgcolor)
+    frame.pack(side=side, fill=fill, expand=expand, anchor=anchor)
+    return frame
