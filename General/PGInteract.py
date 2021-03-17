@@ -38,6 +38,11 @@ def maketable(cursor, query):
     cursor.execute(query)
 
 
+def droptable(cursor, query):
+    '''Deze functie dropt een tabel'''
+    cursor.execute(query)
+
+
 def closeconnection(connection, cursor):
     '''Deze functie sluit de connectie met de PGAdmin database'''
     cursor.close()
