@@ -5,8 +5,11 @@ In deze directory staan de programma's die ik heb gebruikt om mijn oorspronkelij
 ## General
 In deze directory staan verscheidene zelfgemaakt programma's voor algemene dingen zoals database interactie en grafische weergaves.
 
-## Make Tables
+## New Tables
 In deze directory staat een programma die een nieuwe tabel maakt en nieuwe data genereert voor die tabel. Deze tabel kan dan worden gebruikt door de recommendation engine.
 
 ### Hier een screenshot van deze tabel
 ![image](https://user-images.githubusercontent.com/75225200/111640094-25c35a00-87fc-11eb-857a-86dd3e8761f4.png)
+
+## Recommendation
+In deze directory staat het programma wat een grafische interface start en de recommendations verzorgt.
