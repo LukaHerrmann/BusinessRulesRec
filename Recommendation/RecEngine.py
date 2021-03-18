@@ -1,12 +1,14 @@
 import GrapicalInterface as G
 import PGInteract as P
+import MongoInteract as M
 from tkinter import *
+from pymongo import MongoClient
 
+background = '#42b0f5'
+bgbutton = 'white'
+bgbuttonactivated = 'gray'
 
 def start():
-    background = '#42b0f5'
-    bgbutton = 'white'
-    bgbuttonactivated = 'gray'
     root = G.makewindow(500, 700, 'Recommendations', background)
     generalframe = G.makeframe(root, TOP, background, 1, BOTH, 'n')
     productsframe = G.makeframe(root, BOTTOM, background, 1, BOTH, 's')
@@ -23,16 +25,21 @@ def start():
     submitbutton = G.makebutton(generalframe, 0.7, 0.24, 6, 1, 'Change', ('', 8),
                                 'black', bgbutton, bgbuttonactivated, 'w', 'raised')
     connection, cursor = setupconnection()
-    submitbutton['command'] = lambda: submit(cursor, contentbutton, collaborativebutton, profileentry)
+    submitbutton['command'] = lambda: submit(cursor, contentbutton, collaborativebutton, profileentry,
+                                             submitbutton, productsframe, root)
     root.mainloop()
     P.closeconnection(connection, cursor)
 
 
-def submit(cursor, button1, button2, entry):
-    if button1['relief'] == 'sunken':
-        contentfilter(entry.get(), cursor)
-    elif button2['relief'] == 'sunken':
-        collabfilter(entry.get(), cursor)
+def submit(cursor, button1, button2, entry, submitbutton, frame, root):
+    if button1['relief'] == 'sunken' or button2['relief'] == 'sunken':
+        frame.destroy()
+        frame = G.makeframe(root, BOTTOM, background, 1, BOTH, 's')
+        submitbutton['command'] = lambda: submit(cursor, button1, button2, entry, submitbutton, frame, root)
+        if button1['relief'] == 'sunken':
+            contentfilter(entry.get(), cursor, frame, root)
+        else:
+            collabfilter(entry.get(), cursor)
 
 
 def setupconnection():
@@ -41,16 +48,43 @@ def setupconnection():
     return connection, cursor
 
 
-def contentfilter(profileid, cursor):
-    newproductsquery = f"select id, name, brand, type, category, sellingprice from products where category is not null " \
-                       f"except select id, name, brand, type, category, sellingprice from profiles_previously_viewed " \
-                       f"inner join products on prodid=id where profid='{profileid}' limit 4"
-    newproducts = P.getdata(cursor, newproductsquery, False)
-    print(newproducts)
+def contentfilter(profileid, cursor, frame, root):
+    bestcategory = P.getdata(cursor, f"select bestcategory from bestcategories where profileid='{profileid}'")
+    columns = ('_id', 'name', 'brand', 'type', 'category', 'selling_price')
+    client = MongoClient()
+    db = client.huwebshop
+    collection = db.products
+    newproducts = M.getitems(collection, {'category': bestcategory[0]}, limit=4)
+    displayproducts(newproducts, columns, frame, root)
 
 
 def collabfilter(profileid, cursor):
     pass
+
+
+def displayproducts(products, columns, frame, root):
+    fulldisplay = lambda x: (lambda: displayfullproduct(x, columns, root))
+    number = 0
+    for product in products:
+        label = G.makelabel(frame, 0.2, 0.1+number*0.2, product['name'], ('', 10), 'black', background, 'w')
+        button = G.makebutton(frame, 0.05, 0.1+number*0.2, 8, 1, 'expand', ('', 8), 'black', bgbutton, bgbuttonactivated,
+                              'w', 'raised')
+        button['command'] = fulldisplay(product)
+        number += 1
+
+
+def displayfullproduct(product, columns, root):
+    newwindow = G.maketoplevel(root, 800, 400, product['name'], background)
+    number = 0
+    for column in columns:
+        if column == 'selling_price':
+            label = G.makelabel(newwindow, 0.05, 0.1 + number * 0.1,
+                                column + ': ' + str(product['price'][column]),
+                                ('', 10, 'bold'), 'black', background, 'w')
+        elif column in product.keys():
+            label = G.makelabel(newwindow, 0.05, 0.1 + number * 0.1, column + ': ' + str(product[column]),
+                                ('', 10, 'bold'), 'black', background, 'w')
+            number += 1
 
 
 if __name__ == '__main__':
