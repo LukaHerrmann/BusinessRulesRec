@@ -1,4 +1,4 @@
-# BusinessRulesRec
+# Business rules voor Recommendation Engine
 ## Database Setup
 In deze directory staan de programma's die ik heb gebruikt om mijn oorspronkelijke database op te zetten. Deze database bestaat uit de backup data die is meegegeven door de HU.
 
