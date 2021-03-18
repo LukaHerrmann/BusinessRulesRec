@@ -52,11 +52,16 @@ def setupconnection():
 
 def contentfilter(profileid, cursor, frame, root):
     bestcategory = P.getdata(cursor, f"select bestcategory from bestcategories where profileid='{profileid}'")
+    alreadyviewed = P.getdata(cursor, f"select prodid from profiles_previously_viewed where profid='{profileid}'", False)
+    filters = []
+    for product in alreadyviewed:
+        filters.append({'_id': {'$ne': product[0]}})
     columns = ('_id', 'name', 'brand', 'type', 'category', 'selling_price')
     client = MongoClient()
     db = client.huwebshop
     collection = db.products
-    newproducts = M.getitems(collection, {'category': bestcategory[0]}, limit=4)
+    filter = {'$and': [{'category': bestcategory[0]}]+filters}
+    newproducts = M.getitems(collection, filter, limit=4)
     displayproducts(newproducts, columns, frame, root)
 
 
