@@ -10,7 +10,7 @@ textcolor = 'black'
 bgbutton = 'white'
 bgbuttonactivated = 'gray'
 # bij het toevoegen van kolommen moet de selling_price als laatste blijven; werkt niet bij nested values
-displayedcolumns = ('_id', 'name', 'brand', 'type', 'category', 'description', 'selling_price')
+displayedcolumns = ('_id', 'name', 'brand', 'type', 'category', 'selling_price')
 
 
 def start():
