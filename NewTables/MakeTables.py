@@ -25,8 +25,7 @@ def profilecategories(connection, cursor):
                    'INNER JOIN (select profid, category, count(category) as frequency ' \
                    'from profiles_previously_viewed inner join products on prodid = id ' \
                    'group by profid, category) as b ' \
-                   'ON a.profid = b.profid AND a.highestfreq = b.frequency ' \
-                   'order by highestfreq ASC'
+                   'ON a.profid = b.profid AND a.highestfreq = b.frequency'
     profileinfo = P.getdata(cursor, profilequery, False)
     totalsize = len(profileinfo)
     iteration = 0
