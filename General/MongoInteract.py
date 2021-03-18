@@ -5,5 +5,5 @@ def getitems(collection, filter, limit=False, sortterm=False):
     if sortterm:
         result = result.sort(sortterm)
     if limit:
-        return result[:limit]
+        return result.limit(limit)
     return result
