@@ -67,8 +67,23 @@ def makeentry(root, x, y, width, font, textcolor, bgcolor, anchor):
     return entry
 
 
-def makeframe(root,side, bgcolor, expand, fill, anchor):
+def makeframe(root, side, bgcolor, expand, fill, anchor):
     frame = Frame(root,
                   bg=bgcolor)
     frame.pack(side=side, fill=fill, expand=expand, anchor=anchor)
     return frame
+
+
+def maketoplevel(root, windowwidth, windowheight, windowtitle, bgcolor):
+    subwindow = Toplevel(root)
+    # De breedte en hoogte van het scherm ophalen
+    screenwidth = root.winfo_screenwidth()
+    screenheight = root.winfo_screenheight()
+    # De voorafgaande informatie gebruiken om de interface in het midden van het scherm te plaatsen
+    x_coordinate = int((screenwidth / 2) - (windowwidth / 2))
+    y_coordinate = int((screenheight / 2) - (windowheight / 2))
+    subwindow.geometry('{}x{}+{}+{}'.format(windowwidth, windowheight, x_coordinate, y_coordinate))
+    subwindow.configure(bg=bgcolor)
+    subwindow.title(windowtitle)
+    subwindow.resizable(False, False)
+    return subwindow
