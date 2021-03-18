@@ -59,22 +59,37 @@ def contentfilter(profileid, cursor, frame, root):
     if check:
         bestcategory, alreadyviewed = getprofileinfo(cursor, profileid)
         filters = makefilter(alreadyviewed)
+        thefilter = {'$and': [{'category': bestcategory}]+filters}
         client = MongoClient()
         db = client.huwebshop
         collection = db.products
-        thefilter = {'$and': [{'category': bestcategory[0]}]+filters}
         newproducts = M.getitems(collection, thefilter, limit=4)
         displayproducts(newproducts, displayedcolumns, frame, root)
     else:
-        handleerror(frame)
+        handleerror(frame, 'Dit profileid staat niet in de database')
 
 
 def collabfilter(profileid, cursor, frame, root):
     check = checkprofileid(profileid, cursor)
     if check:
         bestcategory, alreadyviewed = getprofileinfo(cursor, profileid)
+        newproductquery = f"select prodid " \
+                          f"from profiles_previously_viewed " \
+                          f"inner join bestcategories on profid=profileid " \
+                          f"where bestcategory='{bestcategory}' " \
+                          f"and not profid='{profileid}'"
+        newproductquery = makefilter(alreadyviewed, newproductquery)
+        newproductquery += f" limit 4"
+        newproducts = P.getdata(cursor, newproductquery, False)
+        filters = makefilter(newproducts, exclude=False)
+        thefilter = {'$or': filters}
+        client = MongoClient()
+        db = client.huwebshop
+        collection = db.products
+        newproducts = M.getitems(collection, thefilter, limit=4)
+        displayproducts(newproducts, displayedcolumns, frame, root)
     else:
-        handleerror(frame)
+        handleerror(frame, 'Dit profileid staat niet in de database')
 
 
 def checkprofileid(profileid, cursor):
@@ -82,8 +97,8 @@ def checkprofileid(profileid, cursor):
     return result is not None
 
 
-def handleerror(frame):
-    label = G.makelabel(frame, 0.05, 0.2, 'Dit profileid staat niet in de database', ('', 15, 'bold'),
+def handleerror(frame, text):
+    label = G.makelabel(frame, 0.05, 0.2, text, ('', 15, 'bold'),
                         'red', background, 'w')
 
 
@@ -91,14 +106,23 @@ def getprofileinfo(cursor, profileid):
     bestcategory = P.getdata(cursor, f"select bestcategory from bestcategories where profileid='{profileid}'")
     alreadyviewed = P.getdata(cursor, f"select prodid from profiles_previously_viewed where profid='{profileid}'",
                               False)
-    return bestcategory, alreadyviewed
+    return bestcategory[0], alreadyviewed
 
 
-def makefilter(alreadyviewedproducts):
-    filters = []
-    for product in alreadyviewedproducts:
-        filters.append({'_id': {'$ne': product[0]}})
-    return filters
+def makefilter(products, query=False, exclude=True):
+    if query:
+        for product in products:
+            query += f" and not prodid='{product[0]}'"
+        return query
+    else:
+        filters = []
+        if exclude:
+            for product in products:
+                filters.append({'_id': {'$ne': product[0]}})
+        else:
+            for product in products:
+                filters.append({'_id': product[0]})
+        return filters
 
 
 def displayproducts(products, columns, frame, root):
@@ -110,6 +134,8 @@ def displayproducts(products, columns, frame, root):
                               'w', 'raised')
         button['command'] = fulldisplay(product)
         number += 1
+    if not number:
+        handleerror(frame, 'Geen recommendations beschikbaar')
 
 
 def displayfullproduct(product, columns, root):
