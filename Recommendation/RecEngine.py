@@ -4,10 +4,14 @@ import MongoInteract as M
 from tkinter import *
 from pymongo import MongoClient
 
+#algemene variabelen
 background = '#42b0f5'
 textcolor = 'black'
 bgbutton = 'white'
 bgbuttonactivated = 'gray'
+
+displayedcolumns = ('_id', 'name', 'brand', 'type', 'category', 'selling_price')
+
 
 def start():
     root = G.makewindow(500, 700, 'Recommendations', background)
@@ -41,7 +45,7 @@ def submit(cursor, button1, button2, entry, submitbutton, frame, root):
         if button1['relief'] == 'sunken':
             contentfilter(entry.get(), cursor, frame, root)
         else:
-            collabfilter(entry.get(), cursor)
+            collabfilter(entry.get(), cursor, frame, root)
 
 
 def setupconnection():
@@ -51,22 +55,50 @@ def setupconnection():
 
 
 def contentfilter(profileid, cursor, frame, root):
+    check = checkprofileid(profileid, cursor)
+    if check:
+        bestcategory, alreadyviewed = getprofileinfo(cursor, profileid)
+        filters = makefilter(alreadyviewed)
+        client = MongoClient()
+        db = client.huwebshop
+        collection = db.products
+        thefilter = {'$and': [{'category': bestcategory[0]}]+filters}
+        newproducts = M.getitems(collection, thefilter, limit=4)
+        displayproducts(newproducts, displayedcolumns, frame, root)
+    else:
+        handleerror(frame)
+
+
+def collabfilter(profileid, cursor, frame, root):
+    check = checkprofileid(profileid, cursor)
+    if check:
+        bestcategory, alreadyviewed = getprofileinfo(cursor, profileid)
+    else:
+        handleerror(frame)
+
+
+def checkprofileid(profileid, cursor):
+    result = P.getdata(cursor, f"select id from profiles where id='{profileid}'")
+    return result is not None
+
+
+def handleerror(frame):
+    label = G.makelabel(frame, 0.05, 0.2, 'Dit profileid staat niet in de database', ('', 15, 'bold'),
+                        'red', background, 'w')
+
+
+def getprofileinfo(cursor, profileid):
     bestcategory = P.getdata(cursor, f"select bestcategory from bestcategories where profileid='{profileid}'")
-    alreadyviewed = P.getdata(cursor, f"select prodid from profiles_previously_viewed where profid='{profileid}'", False)
+    alreadyviewed = P.getdata(cursor, f"select prodid from profiles_previously_viewed where profid='{profileid}'",
+                              False)
+    return bestcategory, alreadyviewed
+
+
+def makefilter(alreadyviewedproducts):
     filters = []
-    for product in alreadyviewed:
+    for product in alreadyviewedproducts:
         filters.append({'_id': {'$ne': product[0]}})
-    columns = ('_id', 'name', 'brand', 'type', 'category', 'selling_price')
-    client = MongoClient()
-    db = client.huwebshop
-    collection = db.products
-    filter = {'$and': [{'category': bestcategory[0]}]+filters}
-    newproducts = M.getitems(collection, filter, limit=4)
-    displayproducts(newproducts, columns, frame, root)
-
-
-def collabfilter(profileid, cursor):
-    pass
+    return filters
 
 
 def displayproducts(products, columns, frame, root):
